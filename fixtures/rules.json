@@ -1,0 +1,128 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "title": "Holiday Cheer PJ Pants for Girls",
+      "handle": "holiday-cheer-pj-pants",
+      "tags": ["ExcludeFromSearch: false", "Sale: Final Sale"],
+      "images": [{"src": "https://cdn.example/pants.png"}],
+      "variants": [
+        {"title": "3", "price": "10.00", "compare_at_price": "20.00", "available": false},
+        {"title": "6", "price": "4.95", "compare_at_price": "20.00", "available": true}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Sold Out Deal",
+      "handle": "sold-out-deal",
+      "tags": ["Inventory: In-Stock"],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "5.00", "compare_at_price": "50.00", "available": false}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Zero Price Placeholder",
+      "handle": "zero-price",
+      "tags": [],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "0.00", "compare_at_price": "30.00", "available": true}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Spring Leggings",
+      "handle": "spring-leggings",
+      "tags": [],
+      "images": [],
+      "variants": [
+        {"title": "S", "price": "5.00", "compare_at_price": null, "available": true},
+        {"title": "M", "price": "5.00", "compare_at_price": "", "available": true},
+        {"title": "L", "price": "5.00", "compare_at_price": "0.00", "available": true}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Kira's Wallaby Care Set",
+      "handle": "kiras-wallaby-care-set",
+      "tags": ["ExcludeFromSearch: false"],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "12.00", "compare_at_price": "30.00", "available": true}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Just Under Sixty",
+      "handle": "just-under-sixty",
+      "tags": [],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "12.01", "compare_at_price": "30.00", "available": true}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Merry Everything PJs for Little Girls",
+      "handle": "merry-everything-pjs",
+      "tags": ["ExcludeFromSearch: false", "ExcludeFromSearch: true"],
+      "images": [],
+      "variants": [
+        {"title": "2T", "price": "14.00", "compare_at_price": "44.00", "available": true},
+        {"title": "3", "price": "14.00", "compare_at_price": "44.00", "available": false}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Soft as Snow Dress for Girls",
+      "handle": "soft-as-snow-dress",
+      "tags": ["AGCat: Girls Clothing and Accessories"],
+      "images": [],
+      "variants": [
+        {"title": "10", "price": "7.00", "compare_at_price": "44.00", "available": true}
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Ringer Tee for Adults",
+      "handle": "ringer-tee-adults",
+      "tags": ["AGCat: Adult Clothing and Accessories"],
+      "images": [],
+      "variants": [
+        {"title": "M", "price": "8.00", "compare_at_price": "32.00", "available": true}
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Flower Fun PJs for Girls & 18-inch Dolls",
+      "handle": "flower-fun-pjs-girls-dolls",
+      "tags": ["AGCat: Bundle", "AGCat: Doll Clothing and Accessories", "AGCat: Girls Clothing and Accessories", "AGCat: Matching Set"],
+      "images": [],
+      "variants": [
+        {"title": "8", "price": "20.00", "compare_at_price": "80.00", "available": true}
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Flower Fun PJs for 18-inch Dolls",
+      "handle": "flower-fun-pjs-dolls",
+      "tags": ["AGCat: Doll Clothing and Accessories"],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "8.00", "compare_at_price": "28.00", "available": true}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Fifty Percent Off",
+      "handle": "fifty-off",
+      "tags": [],
+      "images": [],
+      "variants": [
+        {"title": "Default Title", "price": "15.00", "compare_at_price": "30.00", "available": true}
+      ]
+    }
+  ]
+}
