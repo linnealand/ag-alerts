@@ -1,0 +1,44 @@
+name: Check sales
+
+on:
+  schedule:
+    - cron: "17 * * * *"  # hourly, at :17 (GitHub is busiest on the hour)
+  workflow_dispatch:       # adds a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write  # needed to commit state.json back to the repo
+
+concurrency:
+  group: check-sales  # never let two runs overlap and race on state.json
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        run: python -m unittest
+
+      - name: Check for sales
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python check_sales.py
+
+      - name: Save state
+        run: |
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add state.json
+            git commit -m "Update sale state"
+            git push
+          else
+            echo "state.json unchanged"
+          fi
