@@ -2,7 +2,7 @@ name: Check sales
 
 on:
   schedule:
-    - cron: "17 * * * *"  # hourly, at :17 (GitHub is busiest on the hour)
+    - cron: "15 * * * *"  # hourly, at :15
   workflow_dispatch:       # adds a "Run workflow" button in the Actions tab
 
 permissions:
