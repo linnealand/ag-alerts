@@ -102,7 +102,7 @@ class Notifications(unittest.TestCase):
         ms = list(cs.find_matches([product(i) for i in range(6)]).values())
         notes = cs.build_notifications(ms)
         self.assertEqual(len(notes), 1)
-        self.assertEqual(notes[0]["click"], cs.SALE_PAGE)
+        self.assertEqual(notes[0]["click"], cs.LAST_CHANCE)
         self.assertEqual(len(cs.build_notifications(ms[:5])), 5)
 
 
@@ -142,33 +142,30 @@ class StateTracking(unittest.TestCase):
         self.assertNotIn("1", state["items"])
 
     def test_safety_check(self):
-        cs.safety_check(300, {"last_product_count": 587})
+        cs.safety_check(1)  # any non-empty feed is accepted, however small
         with self.assertRaises(cs.CheckError):
-            cs.safety_check(200, {"last_product_count": 587})
-        with self.assertRaises(cs.CheckError):
-            cs.safety_check(0, None)
+            cs.safety_check(0)
 
 
 class Fetching(unittest.TestCase):
-    def test_paginates_until_short_page_and_dedupes(self):
+    def test_paginates_until_short_page(self):
         calls = []
 
         def fake_get(url):
             calls.append(url)
-            if "/sale/" in url and url.endswith("page=1"):
+            if url.endswith("page=1"):
                 return {"products": [product(i) for i in range(250)]}
-            if "/sale/" in url:
-                return {"products": [product(i) for i in range(250, 260)]}
-            return {"products": [product(i) for i in range(5)]}
+            return {"products": [product(i) for i in range(250, 260)]}
 
-        products = cs.fetch_all(get=fake_get, pause=0)
+        products = cs.fetch_products(get=fake_get, pause=0)
         self.assertEqual(len(products), 260)
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all(u.startswith(cs.LAST_CHANCE + "/products.json") for u in calls))
         self.assertTrue(all("sort_by" not in u for u in calls))
 
     def test_bad_response_raises(self):
         with self.assertRaises(cs.CheckError):
-            cs.fetch_collection("sale", get=lambda url: {"oops": 1}, pause=0)
+            cs.fetch_products(get=lambda url: {"oops": 1}, pause=0)
 
 
 class RunFlow(unittest.TestCase):
@@ -192,7 +189,7 @@ class RunFlow(unittest.TestCase):
         self.assertIn("set up", self.sent[0]["title"])
         saved = json.loads(self.state.read_text())
         self.assertEqual(len(saved["items"]), 10)
-        self.assertEqual(saved["last_product_count"], 10)
+        self.assertNotIn("last_product_count", saved)
 
     def test_failed_send_does_not_save(self):
         self.run_with([product(1)])

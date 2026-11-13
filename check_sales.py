@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """American Girl sale alerts.
 
-Fetches the store's collection feeds, finds in-stock products at 60% off or
+Fetches the store's Last Chance collection feed, finds in-stock products at 60% off or
 more, and sends an ntfy push for each product that newly qualifies.
 
 Usage:
@@ -29,14 +29,12 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 STORE = "https://www.americangirl.com"
-COLLECTIONS = ["american-girl-last-chance", "sale"]
-SALE_PAGE = f"{STORE}/collections/sale"
+LAST_CHANCE = f"{STORE}/collections/american-girl-last-chance"
 PAGE_SIZE = 250
 MAX_PAGES = 20  # guard against an endless pagination loop
 
 MAX_DISCOUNT_RATIO = Decimal(40)  # price must be <= 40% of compare_at (60%+ off)
 REAPPEAR_DAYS = 7  # a product must be gone this long before it can alert again
-MIN_COUNT_RATIO = Decimal("0.5")  # safety check against a bad/partial response
 MAX_INDIVIDUAL_ALERTS = 5
 HEARTBEAT_WEEKDAY = 0  # Monday
 
@@ -84,11 +82,11 @@ def retry_after_seconds(header: str | None) -> int:
         return 60
 
 
-def fetch_collection(handle: str, get=http_get_json, pause=REQUEST_PAUSE) -> list[dict]:
-    """Fetch every product in a collection, 250 per page (no sort_by)."""
+def fetch_products(get=http_get_json, pause=REQUEST_PAUSE) -> list[dict]:
+    """Fetch every Last Chance product, 250 per page (no sort_by)."""
     products: list[dict] = []
     for page in range(1, MAX_PAGES + 1):
-        url = f"{STORE}/collections/{handle}/products.json?limit={PAGE_SIZE}&page={page}"
+        url = f"{LAST_CHANCE}/products.json?limit={PAGE_SIZE}&page={page}"
         data = get(url)
         batch = data.get("products")
         if not isinstance(batch, list):
@@ -98,18 +96,7 @@ def fetch_collection(handle: str, get=http_get_json, pause=REQUEST_PAUSE) -> lis
             return products
         if pause:
             time.sleep(pause)
-    raise CheckError(f"Collection {handle} has more than {MAX_PAGES} pages; stopping")
-
-
-def fetch_all(collections=COLLECTIONS, get=http_get_json, pause=REQUEST_PAUSE) -> list[dict]:
-    """Fetch all collections and de-duplicate by product ID."""
-    merged: dict[int, dict] = {}
-    for i, handle in enumerate(collections):
-        if i and pause:
-            time.sleep(pause)
-        for p in fetch_collection(handle, get=get, pause=pause):
-            merged.setdefault(p["id"], p)
-    return list(merged.values())
+    raise CheckError(f"Last Chance has more than {MAX_PAGES} pages; stopping")
 
 
 # --------------------------------------------------------------------------
@@ -207,7 +194,6 @@ def load_state(path: Path) -> dict | None:
         return None
     with path.open(encoding="utf-8") as f:
         state = json.load(f)
-    state.setdefault("last_product_count", 0)
     state.setdefault("items", {})
     return state
 
@@ -220,15 +206,9 @@ def save_state(path: Path, state: dict) -> None:
     tmp.replace(path)
 
 
-def safety_check(product_count: int, state: dict | None) -> None:
+def safety_check(product_count: int) -> None:
     if product_count == 0:
         raise CheckError("Feed returned no products")
-    previous = (state or {}).get("last_product_count") or 0
-    if previous and Decimal(product_count) < Decimal(previous) * MIN_COUNT_RATIO:
-        raise CheckError(
-            f"Product count dropped from {previous} to {product_count} "
-            f"(below {MIN_COUNT_RATIO:.0%}); not trusting this response"
-        )
 
 
 def update_state(state: dict, matches: dict[str, dict], today: dt.date) -> list[str]:
@@ -305,7 +285,7 @@ def summary_notification(matches: list[dict], heading: str) -> dict:
     return {
         "title": heading,
         "message": "\n".join(lines),
-        "click": SALE_PAGE,
+        "click": LAST_CHANCE,
         "tags": ["shopping"],
     }
 
@@ -339,7 +319,7 @@ def send_ntfy(msg: dict, topic: str, server: str) -> None:
 # --------------------------------------------------------------------------
 
 def run(args: argparse.Namespace, today: dt.date | None = None,
-        fetch=fetch_all, send=send_ntfy) -> int:
+        fetch=fetch_products, send=send_ntfy) -> int:
     today = today or dt.datetime.now(dt.timezone.utc).date()
     state_path = Path(args.state)
     topic = os.environ.get("NTFY_TOPIC", "")
@@ -351,12 +331,11 @@ def run(args: argparse.Namespace, today: dt.date | None = None,
     first_run = state is None
 
     products = fetch()
-    safety_check(len(products), state)
+    safety_check(len(products))
 
     matches = find_matches(products)
-    working = state or {"last_product_count": 0, "items": {}}
+    working = state or {"items": {}}
     new_ids = update_state(working, matches, today)
-    working["last_product_count"] = len(products)
 
     if first_run:
         # Save everything as seen and send one overview instead of N alerts.
@@ -369,7 +348,7 @@ def run(args: argparse.Namespace, today: dt.date | None = None,
         notes.append({
             "title": "Sale alerts still running",
             "message": f"Tracking {len(working['items'])} items at 60%+ off "
-                       f"across {len(products)} sale products.",
+                       f"across {len(products)} Last Chance products.",
             "tags": ["white_check_mark"],
         })
         working["last_heartbeat"] = today.isoformat()
@@ -405,7 +384,7 @@ def main(argv=None) -> int:
             if not topic:
                 raise CheckError("NTFY_TOPIC is not set")
             send_ntfy({"title": "Test alert", "message": "AG sale alerts are connected.",
-                       "click": SALE_PAGE}, topic,
+                       "click": LAST_CHANCE}, topic,
                       os.environ.get("NTFY_SERVER", "https://ntfy.sh"))
             print("Test notification sent.")
             return 0
